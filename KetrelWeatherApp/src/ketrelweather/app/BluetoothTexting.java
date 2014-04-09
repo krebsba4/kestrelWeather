@@ -108,8 +108,7 @@ public class BluetoothTexting extends Activity{
 		Button searchButton = (Button)findViewById(R.id.button_search);
 		searchButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View view) {
-				registerReceiver(discoveryResult,
-						new IntentFilter(BluetoothDevice.ACTION_FOUND));
+				registerReceiver(discoveryResult, new IntentFilter(BluetoothDevice.ACTION_FOUND));
 				if (!bluetooth.isDiscovering()) {
 					foundDevices.clear();
 					bluetooth.startDiscovery();
@@ -130,7 +129,6 @@ public class BluetoothTexting extends Activity{
 					
 					@Override
 					protected void onPostExecute(Void result) {
-
 						switchUI();
 					}
 					@Override
@@ -170,6 +168,7 @@ public class BluetoothTexting extends Activity{
 		messageText.setVisibility(View.VISIBLE);
 		list.setVisibility(View.GONE);
 		textEntry.setEnabled(true);
+		textEntry.setText("DT,MG,TR,WS,CW,HW,TP,WC,RH,HI,DP,WB,BP,AL,DA<LF>");
 		textEntry.setOnKeyListener(new OnKeyListener() {
 			public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
 				if ((keyEvent.getAction() == KeyEvent.ACTION_DOWN) &&
@@ -246,6 +245,4 @@ public class BluetoothTexting extends Activity{
 			}
 		}
 	}
-
-
 }
