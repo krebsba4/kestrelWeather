@@ -119,7 +119,7 @@ public class BluetoothTexting extends Activity{
 	}
 	
 	private void setupListView(){
-		foundDevices = new ArrayList();
+		foundDevices = new ArrayList<BluetoothDevice>();
 		aa = new ArrayAdapter<BluetoothDevice>(this, android.R.layout.simple_list_item_1, foundDevices);
 		list = (ListView)findViewById(R.id.list_discovered);
 		list.setAdapter(aa);
