@@ -1,8 +1,6 @@
 package ketrelweather.app;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -16,35 +14,29 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.ParcelUuid;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.view.View.OnKeyListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Toast;
 
-public class BluetoothTextingFragment extends Fragment{
-		private BluetoothAdapter bluetooth;
-		private BluetoothSocket socket;
-		private UUID uuid = UUID.fromString("a60f35f0-b93a-11de-8a39-08002009c666");
+public class BluetoothFragment extends Fragment{
+		private static BluetoothAdapter bluetooth;
+		private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 		private static int DISCOVERY_REQUEST = 1;
 		private ArrayList<BluetoothDevice> foundDevices;
 		private ArrayAdapter<BluetoothDevice> aa;
 		private ListView list;
-		private Handler handler = new Handler();
 
-		public BluetoothTextingFragment(){}
-
+		public BluetoothFragment(){}
 		
 		
 		@Override
@@ -54,10 +46,10 @@ public class BluetoothTextingFragment extends Fragment{
 		}
 		
 		private void setUp(){
-			configureBluetooth();
-			setupListView();
-			setupSearchButton();
+			configureBluetooth();		
 			setupListenButton();
+			setupSearchButton();	
+			setupListView();
 		}
 		
 		@Override
@@ -66,23 +58,12 @@ public class BluetoothTextingFragment extends Fragment{
 			setUp();
 		}
 		
-		
-		/*public void onCreateView(Bundle savedInstanceState){
-			super.onCreate(savedInstanceState);
-			getActivity().setContentView(R.layout.activity_main);
-
-			configureBluetooth();
-			setupListView();
-			setupSearchButton();
-			setupListenButton();
-		}*/
-
 		private void configureBluetooth(){
 			bluetooth = BluetoothAdapter.getDefaultAdapter();
 		}
 
 		private void setupListenButton(){
-			Button listenButton = (Button)getView().findViewById(R.id.button_listen);
+			Button listenButton = (Button)this.getActivity().findViewById(R.id.button_listen);
 			listenButton.setOnClickListener(new OnClickListener(){
 				public void onClick(View view){
 					Intent disc;
@@ -98,23 +79,32 @@ public class BluetoothTextingFragment extends Fragment{
 				boolean isDiscoverable = resultCode > 0;
 				if (isDiscoverable) {
 					String name = "bluetoothserver";
-					try {
-						final BluetoothServerSocket btserver = bluetooth.listenUsingRfcommWithServiceRecord(name, uuid);
+					try {			
+						final BluetoothServerSocket btserver = bluetooth.listenUsingRfcommWithServiceRecord(name, UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"));
 						AsyncTask<Integer, Void, BluetoothSocket> acceptThread = new AsyncTask<Integer, Void, BluetoothSocket>() {
 
 							@Override
 							protected void onPostExecute(BluetoothSocket result) {
-								if (result != null)
-									switchUI();
+								if (result != null){
+									Context context = getActivity();
+									CharSequence text = "Bluetooth Server Connected!";
+									int duration = Toast.LENGTH_SHORT;
+
+									Toast toast = Toast.makeText(context, text, duration);
+									toast.show();
+									//switchUI();
+								}						
 							}
 
 							@Override
 							protected BluetoothSocket doInBackground(Integer... params) {
 								try {
-									socket = btserver.accept(params[0]*1000);
-									return socket;
+									Log.d("BLUETOOTH_SERVER", "attempting to open input socket with btserver: " + btserver.toString());
+									MainActivity.inputSocket = btserver.accept();
+									Log.d("BLUETOOTH_SERVER", "input socket open" + MainActivity.inputSocket.toString());
+									return MainActivity.inputSocket;		
 								} catch (IOException e) {
-									Log.d("BLUETOOTH", e.getMessage());
+									Log.d("BLUETOOTH_SERVER", e.getMessage());
 								}
 
 								return null;
@@ -123,14 +113,14 @@ public class BluetoothTextingFragment extends Fragment{
 						acceptThread.execute(resultCode);
 
 					} catch (IOException e) {
-						Log.d("BLUETOOTH", e.getMessage());
+						Log.d("BLUETOOTH_SERVER", e.getMessage());
 					}
 				}
-			}
+			} 
 		}
 
 		private void setupSearchButton(){
-			Button searchButton = (Button)getView().findViewById(R.id.button_search);
+			Button searchButton = (Button)this.getActivity().findViewById(R.id.button_search);
 			searchButton.setOnClickListener(new OnClickListener() {
 				public void onClick(View view) {
 					getActivity().registerReceiver(discoveryResult, new IntentFilter(BluetoothDevice.ACTION_FOUND));
@@ -144,24 +134,43 @@ public class BluetoothTextingFragment extends Fragment{
 
 		private void setupListView(){
 			foundDevices = new ArrayList<BluetoothDevice>();
-			aa = new ArrayAdapter<BluetoothDevice>(getActivity(), android.R.layout.simple_list_item_1, foundDevices);
-			list = (ListView)getView().findViewById(R.id.list_discovered);
+			aa = new ArrayAdapter<BluetoothDevice>(this.getActivity(), android.R.layout.simple_list_item_1, foundDevices);
+			list = (ListView)this.getActivity().findViewById(R.id.list_discovered);
 			list.setAdapter(aa);
 
 			list.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> arg0, View view, int index, long arg3) {
+					
+					Log.d("LIST_VIEW", " found device: " + foundDevices.get(index));
+					foundDevices.get(index).fetchUuidsWithSdp();
+					//Object []bluetoothArray = bluetoothSet.toArray();
+					ParcelUuid [] uuid = ((BluetoothDevice)foundDevices.get(index)).getUuids();
+					for(int i = 0; i < uuid.length; i++){
+						Log.d("get uuid", "uuid's: " + uuid[0].toString());
+					}
+					
 					AsyncTask<Integer, Void, Void> connectTask = new AsyncTask<Integer, Void, Void>() {
 
 						@Override
 						protected void onPostExecute(Void result) {
-							switchUI();
+							
+							Context context = getActivity();
+							CharSequence text = "Bluetooth Client Connected!";
+							int duration = Toast.LENGTH_SHORT;
+
+							Toast toast = Toast.makeText(context, text, duration);
+							toast.show();
+									
+							//switchUI();
 						}
 						@Override
 						protected Void doInBackground(Integer... params) {
 							try {
 								BluetoothDevice device = foundDevices.get(params[0]);
-								socket = device.createRfcommSocketToServiceRecord(uuid);
-								socket.connect();
+								Log.d("BLUETOOTH_CLIENT", "attempting to open output socket");
+								MainActivity.outputSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"));
+								MainActivity.outputSocket.connect();
+								Log.d("BLUETOOTH", "output socket open");
 							} catch (IOException e) {
 								Log.d("BLUETOOTH_CLIENT", e.getMessage());
 							}
@@ -187,7 +196,7 @@ public class BluetoothTextingFragment extends Fragment{
 		};
 
 
-		private void switchUI() {
+		/*private void switchUI() {
 			final TextView messageText = (TextView)getView().findViewById(R.id.text_messages);
 			final EditText textEntry = (EditText)getView().findViewById(R.id.text_message);
 			messageText.setVisibility(View.VISIBLE);
@@ -210,65 +219,5 @@ public class BluetoothTextingFragment extends Fragment{
 			BluetoothSocketListener bsl = new BluetoothSocketListener(socket, handler, messageText);
 			Thread messageListener = new Thread(bsl);
 			messageListener.start();
-		}
-
-		private void sendMessage(BluetoothSocket socket, String msg) {
-			OutputStream outStream;
-			try {
-				outStream = socket.getOutputStream();
-				byte[] byteString = (msg + " ").getBytes();
-				//stringAsBytes[byteString.length - 1] = 0;
-				outStream.write(byteString);
-			} catch (IOException e) {
-				Log.d("BLUETOOTH_COMMS", e.getMessage());
-			}
-		}
-
-
-		private class MessagePoster implements Runnable {
-			private TextView textView;
-			private String message;
-			public MessagePoster(TextView textView, String message) {
-				this.textView = textView;
-				this.message = message;
-			}
-			public void run() {
-				textView.setText("temperature: " + message);
-			}
-		}
-
-		private class BluetoothSocketListener implements Runnable {
-			private BluetoothSocket socket;
-			private TextView textView;
-			private Handler handler;
-			public BluetoothSocketListener(BluetoothSocket socket, Handler handler, TextView textView) {
-				this.socket = socket;
-				this.textView = textView;
-				this.handler = handler;
-			}
-			public void run() {
-				int bufferSize = 1024;
-				byte[] buffer = new byte[bufferSize];
-				try {
-					InputStream instream = socket.getInputStream();
-					int bytesRead = -1;
-					String message = "";
-					while (true) {
-						message = "";
-						bytesRead = instream.read(buffer);
-						if (bytesRead != -1) {
-							while ((bytesRead==bufferSize)&&(buffer[bufferSize-1] != 0)) {
-								message = message + new String(buffer, 0, bytesRead);
-								bytesRead = instream.read(buffer);
-							}
-							message = message + new String(buffer, 0, bytesRead - 1);
-							handler.post(new MessagePoster(textView, message));
-							socket.getInputStream();
-						}
-					}
-				} catch (IOException e) {
-					Log.d("BLUETOOTH_COMMS", e.getMessage());
-				}
-			}
-		}
+		}*/
 	}

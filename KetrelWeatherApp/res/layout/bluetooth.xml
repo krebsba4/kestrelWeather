@@ -3,41 +3,31 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-  
-    <EditText
-        android:id="@+id/text_message"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:enabled="false" />
 
     <Button
         android:id="@+id/button_search"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/text_message"
-        android:text="Search for listener" />
-
-    <Button
-        android:id="@+id/button_listen"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/button_search"
-        android:text="Listen for connection" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/search_for_listener" >
+    </Button>
 
     <ListView
         android:id="@+id/list_discovered"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@id/button_listen"
-        android:layout_alignParentTop="true" />
+        android:layout_above="@+id/button_listen"
+        android:layout_alignParentLeft="true" >
+    </ListView>
 
-    <TextView
-        android:id="@+id/text_messages"
+    <Button
+        android:id="@+id/button_listen"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_above="@id/button_listen"
-        android:layout_alignParentTop="true"
-        android:visibility="gone" />
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button_search"
+        android:layout_alignParentLeft="true"
+        android:text="@string/listen_for_connection" >
+    </Button>
 
 </RelativeLayout>
