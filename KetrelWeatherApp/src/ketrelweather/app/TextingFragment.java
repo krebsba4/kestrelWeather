@@ -63,33 +63,29 @@ public class TextingFragment extends Fragment{
 					Toast toast = Toast.makeText(context, text, duration);
 					toast.show();
 				}
-				
-				if(MainActivity.inputSocket != null){
-					BluetoothSocketListener bsl = new BluetoothSocketListener(MainActivity.inputSocket, handler, messageText);
-					Thread messageListener = new Thread(bsl);
-					messageListener.start();
-				}
-				else{
-					Context context = getActivity();
-					CharSequence text = "bluetooth input socket not open";
-					int duration = Toast.LENGTH_SHORT;
-
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();		
-					}
 			}
 		});
 
-		
+		if(MainActivity.inputSocket != null){
+			BluetoothSocketListener bsl = new BluetoothSocketListener(MainActivity.inputSocket, handler, messageText);
+			Thread messageListener = new Thread(bsl);
+			messageListener.start();
+		}
+		else{
+			Context context = getActivity();
+			CharSequence text = "bluetooth input socket not open";
+			int duration = Toast.LENGTH_SHORT;
+
+			Toast toast = Toast.makeText(context, text, duration);
+			toast.show();		
+			}
 	}
 
 	private void sendMessage(BluetoothSocket socket, String msg) {
 		OutputStream outStream;
 		try {
 			outStream = new BufferedOutputStream(socket.getOutputStream());
-			//outStream = socket.getOutputStream();
 			byte[] byteString = (msg + " ").getBytes();
-			//stringAsBytes[byteString.length - 1] = 0;
 			outStream.write(byteString);
 		} catch (IOException e) {
 			Log.d("BLUETOOTH_MESSAGE_SENDER", e.getMessage());

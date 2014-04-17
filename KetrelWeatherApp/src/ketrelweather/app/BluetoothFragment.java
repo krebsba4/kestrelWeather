@@ -80,7 +80,8 @@ public class BluetoothFragment extends Fragment{
 				if (isDiscoverable) {
 					String name = "bluetoothserver";
 					try {			
-						final BluetoothServerSocket btserver = bluetooth.listenUsingRfcommWithServiceRecord(name, UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"));
+						
+						final BluetoothServerSocket btserver = bluetooth.listenUsingRfcommWithServiceRecord(name, uuid);
 						AsyncTask<Integer, Void, BluetoothSocket> acceptThread = new AsyncTask<Integer, Void, BluetoothSocket>() {
 
 							@Override
@@ -92,7 +93,14 @@ public class BluetoothFragment extends Fragment{
 
 									Toast toast = Toast.makeText(context, text, duration);
 									toast.show();
-									//switchUI();
+									
+									//close the BluetoothServerSocket so no more connections are formed.
+									try {
+										btserver.close();
+									} catch (IOException e) {
+										Log.d("BLUETOOTH_SERVER", "input server closed so no more connections are formed.");
+										e.printStackTrace();
+									}
 								}						
 							}
 
@@ -141,14 +149,14 @@ public class BluetoothFragment extends Fragment{
 			list.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> arg0, View view, int index, long arg3) {
 					
-					Log.d("LIST_VIEW", " found device: " + foundDevices.get(index));
+				/*	Log.d("LIST_VIEW", " found device: " + foundDevices.get(index));
 					foundDevices.get(index).fetchUuidsWithSdp();
 					//Object []bluetoothArray = bluetoothSet.toArray();
 					ParcelUuid [] uuid = ((BluetoothDevice)foundDevices.get(index)).getUuids();
 					for(int i = 0; i < uuid.length; i++){
 						Log.d("get uuid", "uuid's: " + uuid[0].toString());
 					}
-					
+					*/
 					AsyncTask<Integer, Void, Void> connectTask = new AsyncTask<Integer, Void, Void>() {
 
 						@Override
@@ -160,17 +168,17 @@ public class BluetoothFragment extends Fragment{
 
 							Toast toast = Toast.makeText(context, text, duration);
 							toast.show();
-									
-							//switchUI();
 						}
 						@Override
 						protected Void doInBackground(Integer... params) {
 							try {
 								BluetoothDevice device = foundDevices.get(params[0]);
-								Log.d("BLUETOOTH_CLIENT", "attempting to open output socket");
+									
+								Log.d("BLUETOOTH_CLIENT", "attempting to open output sockets");
 								MainActivity.outputSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"));
 								MainActivity.outputSocket.connect();
 								Log.d("BLUETOOTH", "output socket open");
+								
 							} catch (IOException e) {
 								Log.d("BLUETOOTH_CLIENT", e.getMessage());
 							}
@@ -181,8 +189,7 @@ public class BluetoothFragment extends Fragment{
 				}
 			});
 		}
-
-
+		
 		BroadcastReceiver discoveryResult = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
@@ -194,30 +201,4 @@ public class BluetoothFragment extends Fragment{
 				}
 			}
 		};
-
-
-		/*private void switchUI() {
-			final TextView messageText = (TextView)getView().findViewById(R.id.text_messages);
-			final EditText textEntry = (EditText)getView().findViewById(R.id.text_message);
-			messageText.setVisibility(View.VISIBLE);
-			messageText.setText("testMessage");
-			list.setVisibility(View.GONE);
-			textEntry.setEnabled(true);
-			textEntry.setText("S");
-			textEntry.setOnKeyListener(new OnKeyListener() {
-				public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
-					if ((keyEvent.getAction() == KeyEvent.ACTION_DOWN) &&
-							(keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_BACK)) {
-						sendMessage(socket, textEntry.getText().toString());
-						textEntry.setText("messageSent");
-						return true;
-					}
-					return false;
-				}
-			});
-
-			BluetoothSocketListener bsl = new BluetoothSocketListener(socket, handler, messageText);
-			Thread messageListener = new Thread(bsl);
-			messageListener.start();
-		}*/
 	}
